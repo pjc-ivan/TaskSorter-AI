@@ -47,7 +47,8 @@ def get_service():
                 SCOPES,
             )
 
-            creds = flow.run_local_server(port=0)
+            # Automatically open browser for authorization
+            creds = flow.run_local_server(port=0, open_browser=True)
 
         with open("token.json", "w") as token:
             token.write(creds.to_json())

@@ -177,6 +177,7 @@ ctk.CTkButton(
         root,
         config,
         save_config,
+        refresh_ui,  # Pass refresh callback for language changes
     ),
 ).pack(
     side="left",
