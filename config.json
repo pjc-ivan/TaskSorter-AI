@@ -1,9 +1,9 @@
 {
-  "language": "de",
+  "language": "en",
   "darkmode": true,
   "show_done": true,
   "task_file": "tasks.json",
-  "google_sync": true,
+  "google_sync": false,
   "first_run": false,
   "reminder_minutes": 1440,
   "max_task_length": 200

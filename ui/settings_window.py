@@ -1,27 +1,44 @@
 # File: ui/settings_window.py
+# Settings window for TaskSorter AI application
+# Allows users to configure appearance, tasks, Google Calendar, and AI settings
+
 
 import customtkinter as ctk
 import tkinter as tk
 
 
 # ─────────────────────────────────────
-# SECTION
+# CREATE SECTION HELPER
 # ─────────────────────────────────────
+# Creates a styled frame section with a title for organizing settings
 
 
 def create_section(parent, title):
+    """
+    Create a styled frame section with a title.
+    
+    Args:
+        parent: The parent widget to attach the section to
+        title: The title text to display for this section
+    
+    Returns:
+        A CTkFrame widget containing the section
+    """
 
+    # Create frame with rounded corners
     frame = ctk.CTkFrame(
         parent,
         corner_radius=18,
     )
 
+    # Pack frame to fill horizontal space with padding
     frame.pack(
         fill="x",
         padx=20,
         pady=10,
     )
 
+    # Add section title label
     ctk.CTkLabel(
         frame,
         text=title,
@@ -36,8 +53,9 @@ def create_section(parent, title):
 
 
 # ─────────────────────────────────────
-# SETTINGS WINDOW
+# OPEN SETTINGS WINDOW
 # ─────────────────────────────────────
+# Opens the main settings dialog with all configuration options
 
 
 def open_settings(
@@ -45,17 +63,28 @@ def open_settings(
     config,
     save_config,
 ):
+    """
+    Open the settings window for configuring application preferences.
+    
+    Args:
+        root: The main application window
+        config: The configuration dictionary
+        save_config: Function to save configuration changes
+    """
 
+    # Create new top-level window for settings
     win = ctk.CTkToplevel(root)
 
     win.title("Settings")
 
-    win.geometry("560x650")
+    win.geometry("560x720")
 
     win.resizable(False, False)
 
 
+    # ─────────────────────────────────────
     # TITLE
+    # ─────────────────────────────────────
 
     ctk.CTkLabel(
         win,
@@ -67,9 +96,53 @@ def open_settings(
 
 
     # ─────────────────────────────────────
-    # APPEARANCE
+    # LANGUAGE SECTION
     # ─────────────────────────────────────
 
+    language = create_section(
+        win,
+        "Language",
+    )
+
+    # Variable to store selected language
+    lang_var = tk.StringVar(
+        value=config.get(
+            "language",
+            "en",
+        )
+    )
+
+    def change_language():
+        """Update language setting and save configuration."""
+        config["language"] = lang_var.get()
+        save_config()
+
+    ctk.CTkLabel(
+        language,
+        text="Select Language",
+        font=("Arial", 14),
+    ).pack(
+        anchor="w",
+        padx=22,
+        pady=(0, 8),
+    )
+
+    ctk.CTkOptionMenu(
+        language,
+        values=["English", "Deutsch"],
+        variable=lang_var,
+        command=change_language,
+        height=42,
+    ).pack(
+        fill="x",
+        padx=22,
+        pady=(0, 20),
+    )
+
+
+    # ─────────────────────────────────────
+    # APPEARANCE SECTION
+    # ─────────────────────────────────────
 
     appearance = create_section(
         win,
@@ -77,6 +150,7 @@ def open_settings(
     )
 
 
+    # Dark mode toggle variable
     dark_var = tk.BooleanVar(
         value=config.get(
             "darkmode",
@@ -86,7 +160,7 @@ def open_settings(
 
 
     def toggle_dark():
-
+        """Toggle dark mode and apply theme change."""
         config["darkmode"] = dark_var.get()
 
         ctk.set_appearance_mode(
@@ -113,9 +187,8 @@ def open_settings(
 
 
     # ─────────────────────────────────────
-    # TASKS
+    # TASKS SECTION
     # ─────────────────────────────────────
-
 
     tasks = create_section(
         win,
@@ -123,6 +196,7 @@ def open_settings(
     )
 
 
+    # Show completed tasks toggle variable
     done_var = tk.BooleanVar(
         value=config.get(
             "show_done",
@@ -132,7 +206,7 @@ def open_settings(
 
 
     def toggle_done():
-
+        """Toggle visibility of completed tasks."""
         config["show_done"] = done_var.get()
 
         save_config()
@@ -153,9 +227,8 @@ def open_settings(
 
 
     # ─────────────────────────────────────
-    # GOOGLE CALENDAR
+    # GOOGLE CALENDAR SECTION
     # ─────────────────────────────────────
-
 
     calendar = create_section(
         win,
@@ -163,16 +236,17 @@ def open_settings(
     )
 
 
+    # Google sync toggle variable
     google_var = tk.BooleanVar(
         value=config.get(
             "google_sync",
-            True,
+            False,
         )
     )
 
 
     def toggle_google():
-
+        """Toggle Google Calendar synchronization."""
         config["google_sync"] = google_var.get()
 
         save_config()
@@ -188,10 +262,24 @@ def open_settings(
     ).pack(
         anchor="w",
         padx=22,
+        pady=(0, 8),
+    )
+
+    # Note about contacting developer for Google Calendar feature
+    ctk.CTkLabel(
+        calendar,
+        text="Contact the developer if you want to use this feature.",
+        font=("Arial", 12),
+        text_color="gray",
+        justify="left",
+    ).pack(
+        anchor="w",
+        padx=22,
         pady=(0, 18),
     )
 
 
+    # Reminder time mapping (text to minutes)
     reminder_map = {
         "5 Minutes Before": 5,
         "15 Minutes Before": 15,
@@ -201,12 +289,14 @@ def open_settings(
     }
 
 
+    # Reverse mapping (minutes to text)
     reverse_map = {
         v: k
         for k, v in reminder_map.items()
     }
 
 
+    # Variable for selected reminder time
     reminder_var = tk.StringVar(
         value=reverse_map.get(
             config.get(
@@ -219,7 +309,7 @@ def open_settings(
 
 
     def change_reminder(choice):
-
+        """Update reminder time setting."""
         config["reminder_minutes"] = reminder_map[choice]
 
         save_config()
@@ -250,9 +340,8 @@ def open_settings(
 
 
     # ─────────────────────────────────────
-    # AI
+    # ARTIFICIAL INTELLIGENCE SECTION
     # ─────────────────────────────────────
-
 
     ai = create_section(
         win,
@@ -260,6 +349,7 @@ def open_settings(
     )
 
 
+    # Information label about AI usage
     ai_label = ctk.CTkLabel(
         ai,
         text=(
