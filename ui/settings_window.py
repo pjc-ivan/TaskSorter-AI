@@ -104,17 +104,25 @@ def open_settings(
         "Language",
     )
 
-    # Variable to store selected language
-    lang_var = tk.StringVar(
-        value=config.get(
-            "language",
-            "en",
-        )
-    )
+    # Mapping between display names and config values
+    lang_display_map = {
+        "English": "en",
+        "Deutsch": "de",
+    }
+    
+    # Reverse mapping for displaying current selection
+    lang_reverse_map = {v: k for k, v in lang_display_map.items()}
 
-    def change_language():
+    # Variable to store selected language (display name)
+    current_lang_code = config.get("language", "en")
+    current_lang_display = lang_reverse_map.get(current_lang_code, "English")
+    
+    lang_var = tk.StringVar(value=current_lang_display)
+
+    def change_language(selected_value):
         """Update language setting and save configuration."""
-        config["language"] = lang_var.get()
+        # Convert display name to config value
+        config["language"] = lang_display_map.get(selected_value, "en")
         save_config()
 
     ctk.CTkLabel(
@@ -265,17 +273,30 @@ def open_settings(
         pady=(0, 8),
     )
 
-    # Note about contacting developer for Google Calendar feature
-    ctk.CTkLabel(
+    # Highlighted note about contacting developer for Google Calendar feature
+    contact_frame = ctk.CTkFrame(
         calendar,
-        text="Contact the developer if you want to use this feature.",
-        font=("Arial", 12),
-        text_color="gray",
-        justify="left",
-    ).pack(
-        anchor="w",
+        fg_color="#FF6B35",  # Red-orange background for high visibility
+        corner_radius=10,
+        border_width=2,
+        border_color="#CC4400",
+    )
+    contact_frame.pack(
+        fill="x",
         padx=22,
         pady=(0, 18),
+    )
+    
+    ctk.CTkLabel(
+        contact_frame,
+        text="⚠️  IMPORTANT: Contact the developer to enable this feature!",
+        font=("Arial", 14, "bold"),
+        text_color="white",
+        justify="center",
+        wraplength=450,
+    ).pack(
+        padx=15,
+        pady=12,
     )
 
 
