@@ -20,7 +20,7 @@ def parse_due_date(value):
 
     parsed = dateparser.parse(
         str(value),
-        languages=["de", "en"],
+        languages=["en"],  # English only for international compatibility
         settings={
             "PREFER_DATES_FROM": "future"
         }
@@ -75,7 +75,7 @@ def cleanup_text(text: str):
 # ─────────────────────────────────────
 
 
-def parse_task(text: str, lang="de"):
+def parse_task(text: str, lang="en"):
 
     ai_result = parse_task_ai(text)
 
