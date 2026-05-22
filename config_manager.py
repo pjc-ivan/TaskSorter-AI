@@ -14,7 +14,7 @@ CONFIG_FILE = Path("config.json")
 
 
 config = {
-    # Application language: "en" for English, "de" for German
+    # Application language (English only)
     "language": "en",
     # Dark mode enabled/disabled
     "darkmode": True,
