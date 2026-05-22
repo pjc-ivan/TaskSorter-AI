@@ -1,6 +1,7 @@
 # File: ui/settings_window.py
 # Settings window for TaskSorter AI application
 # Allows users to configure appearance, tasks, Google Calendar, and AI settings
+# Note: All UI text is in English for international compatibility
 
 
 import customtkinter as ctk
@@ -9,59 +10,26 @@ import webbrowser
 
 
 # ─────────────────────────────────────
-# TRANSLATIONS DICTIONARY
+# SETTINGS CONSTANTS
 # ─────────────────────────────────────
-# Contains all UI text translations for English and German
+# Defines all text labels and options used in the settings window
 
-TRANSLATIONS = {
-    "en": {
-        "title": "Settings",
-        "language_section": "Language",
-        "select_language": "Select Language",
-        "appearance_section": "Appearance",
-        "dark_mode": "Enable Dark Mode",
-        "tasks_section": "Tasks",
-        "show_completed": "Show Completed Tasks",
-        "calendar_section": "Google Calendar",
-        "sync_tasks": "Sync Tasks With Google Calendar",
-        "contact_dev_warning": "⚠️  IMPORTANT: Contact the developer to enable this feature!",
-        "developer_contact": "📧 Ivan Pejic\n✉️ ivan.pejic@htl-wels.at\n✉️ pivane8@gmail.com",
-        "reminder_label": "Reminder Before Deadline",
-        "ai_section": "Artificial Intelligence",
-        "ai_info": "TaskSorter uses a local AI model\nfor intelligent task extraction.",
-        "languages": ["English", "Deutsch"],
-        "reminders": [
-            "5 Minutes Before",
-            "15 Minutes Before",
-            "1 Hour Before",
-            "1 Day Before",
-            "1 Week Before",
-        ],
-    },
-    "de": {
-        "title": "Einstellungen",
-        "language_section": "Sprache",
-        "select_language": "Sprache auswählen",
-        "appearance_section": "Erscheinungsbild",
-        "dark_mode": "Dunklen Modus aktivieren",
-        "tasks_section": "Aufgaben",
-        "show_completed": "Erledigte Aufgaben anzeigen",
-        "calendar_section": "Google Kalender",
-        "sync_tasks": "Aufgaben mit Google Kalender synchronisieren",
-        "contact_dev_warning": "⚠️  WICHTIG: Kontaktieren Sie den Entwickler, um diese Funktion zu aktivieren!",
-        "developer_contact": "📧 Ivan Pejic\n✉️ ivan.pejic@htl-wels.at\n✉️ pivane8@gmail.com",
-        "reminder_label": "Erinnerung vor Frist",
-        "ai_section": "Künstliche Intelligenz",
-        "ai_info": "TaskSorter verwendet ein lokales KI-Modell\nfür intelligente Aufgabenerkennung.",
-        "languages": ["English", "Deutsch"],
-        "reminders": [
-            "5 Minuten vorher",
-            "15 Minuten vorher",
-            "1 Stunde vorher",
-            "1 Tag vorher",
-            "1 Woche vorher",
-        ],
-    },
+# Reminder time options displayed to the user
+REMINDER_OPTIONS = [
+    "5 Minutes Before",
+    "15 Minutes Before",
+    "1 Hour Before",
+    "1 Day Before",
+    "1 Week Before",
+]
+
+# Maps reminder text to minutes before deadline
+REMINDER_MINUTES = {
+    "5 Minutes Before": 5,
+    "15 Minutes Before": 15,
+    "1 Hour Before": 60,
+    "1 Day Before": 1440,
+    "1 Week Before": 10080,
 }
 
 
@@ -129,20 +97,16 @@ def open_settings(
         root: The main application window
         config: The configuration dictionary
         save_config: Function to save configuration changes
-        refresh_ui_callback: Optional callback to refresh UI after language change
+        refresh_ui_callback: Optional callback to refresh UI after settings change
     """
-
-    # Get current language for translations
-    lang_code = config.get("language", "en")
-    t = TRANSLATIONS.get(lang_code, TRANSLATIONS["en"])
 
     # Create new top-level window for settings
     win = ctk.CTkToplevel(root)
 
-    win.title(t["title"])
+    win.title("Settings")
 
-    # Increased window size to fit all content
-    win.geometry("600x780")
+    # Window size adjusted to fit all content comfortably
+    win.geometry("600x720")
 
     win.resizable(False, False)
 
@@ -153,66 +117,10 @@ def open_settings(
 
     ctk.CTkLabel(
         win,
-        text=t["title"],
+        text="Settings",
         font=("Arial", 28, "bold"),
     ).pack(
         pady=(24, 18)
-    )
-
-
-    # ─────────────────────────────────────
-    # LANGUAGE SECTION
-    # ─────────────────────────────────────
-
-    language_frame = create_section(
-        win,
-        t["language_section"],
-    )
-
-    # Mapping between display names and config values
-    lang_display_map = {
-        "English": "en",
-        "Deutsch": "de",
-    }
-    
-    # Reverse mapping for displaying current selection
-    lang_reverse_map = {v: k for k, v in lang_display_map.items()}
-
-    # Variable to store selected language (display name)
-    current_lang_code = config.get("language", "en")
-    current_lang_display = lang_reverse_map.get(current_lang_code, "English")
-    
-    lang_var = tk.StringVar(value=current_lang_display)
-
-    def change_language(selected_value):
-        """Update language setting and save configuration."""
-        # Convert display name to config value
-        config["language"] = lang_display_map.get(selected_value, "en")
-        save_config()
-        # Refresh UI if callback provided
-        if refresh_ui_callback:
-            refresh_ui_callback()
-
-    ctk.CTkLabel(
-        language_frame,
-        text=t["select_language"],
-        font=("Arial", 14),
-    ).pack(
-        anchor="w",
-        padx=22,
-        pady=(0, 8),
-    )
-
-    ctk.CTkOptionMenu(
-        language_frame,
-        values=t["languages"],
-        variable=lang_var,
-        command=change_language,
-        height=42,
-    ).pack(
-        fill="x",
-        padx=22,
-        pady=(0, 20),
     )
 
 
@@ -222,7 +130,7 @@ def open_settings(
 
     appearance = create_section(
         win,
-        t["appearance_section"],
+        "Appearance",
     )
 
 
@@ -250,7 +158,7 @@ def open_settings(
 
     ctk.CTkCheckBox(
         appearance,
-        text=t["dark_mode"],
+        text="Enable Dark Mode",
         variable=dark_var,
         command=toggle_dark,
         checkbox_width=24,
@@ -268,7 +176,7 @@ def open_settings(
 
     tasks = create_section(
         win,
-        t["tasks_section"],
+        "Tasks",
     )
 
 
@@ -290,7 +198,7 @@ def open_settings(
 
     ctk.CTkCheckBox(
         tasks,
-        text=t["show_completed"],
+        text="Show Completed Tasks",
         variable=done_var,
         command=toggle_done,
         checkbox_width=24,
@@ -308,7 +216,7 @@ def open_settings(
 
     calendar = create_section(
         win,
-        t["calendar_section"],
+        "Google Calendar",
     )
 
 
@@ -330,7 +238,7 @@ def open_settings(
 
     ctk.CTkCheckBox(
         calendar,
-        text=t["sync_tasks"],
+        text="Sync Tasks With Google Calendar",
         variable=google_var,
         command=toggle_google,
         checkbox_width=24,
@@ -357,7 +265,7 @@ def open_settings(
     
     ctk.CTkLabel(
         contact_frame,
-        text=t["contact_dev_warning"],
+        text="⚠️  IMPORTANT: Contact the developer to enable this feature!",
         font=("Arial", 14, "bold"),
         text_color="white",
         justify="center",
@@ -370,7 +278,7 @@ def open_settings(
     # Developer contact information
     ctk.CTkLabel(
         contact_frame,
-        text=t["developer_contact"],
+        text="📧 Ivan Pejic\n✉️ ivan.pejic@htl-wels.at\n✉️ pivane8@gmail.com",
         font=("Arial", 13, "bold"),
         text_color="white",
         justify="center",
@@ -381,61 +289,34 @@ def open_settings(
     )
 
 
-    # Reminder time mapping (text to minutes)
-    reminder_map = {
-        "5 Minutes Before": 5,
-        "15 Minutes Before": 15,
-        "1 Hour Before": 60,
-        "1 Day Before": 1440,
-        "1 Week Before": 10080,
-    }
-    
-    # German reminder mapping
-    reminder_map_de = {
-        "5 Minuten vorher": 5,
-        "15 Minuten vorher": 15,
-        "1 Stunde vorher": 60,
-        "1 Tag vorher": 1440,
-        "1 Woche vorher": 10080,
-    }
-
-
-    # Select appropriate reminder map based on language
-    if lang_code == "de":
-        current_reminder_map = reminder_map_de
-    else:
-        current_reminder_map = reminder_map
-
-
-    # Reverse mapping (minutes to text)
+    # Variable for selected reminder time
+    # Maps minutes to display text
     reverse_map = {
         v: k
-        for k, v in current_reminder_map.items()
+        for k, v in REMINDER_MINUTES.items()
     }
 
-
-    # Variable for selected reminder time
     reminder_var = tk.StringVar(
         value=reverse_map.get(
             config.get(
                 "reminder_minutes",
                 1440,
             ),
-            list(current_reminder_map.keys())[3],  # Default to "1 Day Before" or equivalent
+            "1 Day Before",  # Default reminder time
         )
     )
 
 
     def change_reminder(choice):
         """Update reminder time setting."""
-        config["reminder_minutes"] = current_reminder_map[choice]
+        config["reminder_minutes"] = REMINDER_MINUTES[choice]
 
         save_config()
 
 
     ctk.CTkLabel(
         calendar,
-        text=t["reminder_label"],
+        text="Reminder Before Deadline",
         font=("Arial", 14),
     ).pack(
         anchor="w",
@@ -446,7 +327,7 @@ def open_settings(
 
     ctk.CTkOptionMenu(
         calendar,
-        values=list(current_reminder_map.keys()),
+        values=REMINDER_OPTIONS,
         variable=reminder_var,
         command=change_reminder,
         height=42,
@@ -463,14 +344,14 @@ def open_settings(
 
     ai = create_section(
         win,
-        t["ai_section"],
+        "Artificial Intelligence",
     )
 
 
     # Information label about AI usage
     ai_label = ctk.CTkLabel(
         ai,
-        text=t["ai_info"],
+        text="TaskSorter uses a local AI model\nfor intelligent task extraction.",
         justify="left",
         text_color="gray",
         font=("Arial", 14),
