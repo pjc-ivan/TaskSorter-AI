@@ -225,7 +225,12 @@ def create_task_card(
     notes = task.get(
         "notes",
         "",
-    ).strip()
+    )
+
+    if notes is None:
+        notes = ""
+
+    notes = notes.strip()
 
 
     if notes:
