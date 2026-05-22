@@ -106,7 +106,7 @@ def open_settings(
     win.title("Settings")
 
     # Window size adjusted to fit all content comfortably
-    win.geometry("600x920")
+    win.geometry("600x850")
 
     win.resizable(False, False)
 
@@ -348,6 +348,39 @@ def open_settings(
     )
 
 
+    # Program info section with features and project info
+    program_info_frame = ctk.CTkFrame(
+        ai,
+        fg_color="transparent",
+        border_width=0,
+    )
+    program_info_frame.pack(
+        fill="x",
+        padx=22,
+        pady=(0, 10),
+    )
+
+    program_title = ctk.CTkLabel(
+        program_info_frame,
+        text="TaskSorter AI",
+        font=("Arial", 18, "bold"),
+    )
+    program_title.pack(pady=(5, 5))
+
+    program_description = ctk.CTkLabel(
+        program_info_frame,
+        text="Organise tasks smarter with AI.\n\n"
+             "• Automatic task recognition\n"
+             "• Deadline detection\n"
+             "• Priority sorting\n"
+             "• Google Calendar integration\n\n"
+             "Developed for the HTL ITP Project 2025/26.",
+        font=("Arial", 13),
+        justify="center",
+    )
+    program_description.pack(pady=(0, 10))
+
+
     # Information label about AI usage
     ai_label = ctk.CTkLabel(
         ai,
@@ -361,42 +394,6 @@ def open_settings(
         anchor="w",
         padx=22,
         pady=(0, 18),
-    )
-
-    # Developer information section
-    dev_info_frame = ctk.CTkFrame(
-        ai,
-        fg_color="#2E86AB",  # Blue background for developer info
-        corner_radius=10,
-        border_width=2,
-        border_color="#1A5F7A",
-    )
-    dev_info_frame.pack(
-        fill="x",
-        padx=22,
-        pady=(0, 20),
-    )
-    
-    ctk.CTkLabel(
-        dev_info_frame,
-        text="👨‍💻 Developer Information",
-        font=("Arial", 14, "bold"),
-        text_color="white",
-        justify="center",
-    ).pack(
-        padx=15,
-        pady=(12, 6),
-    )
-    
-    ctk.CTkLabel(
-        dev_info_frame,
-        text="Ivan Pejic\n✉️ ivan.pejic@htl-wels.at\n✉️ pivane8@gmail.com",
-        font=("Arial", 13),
-        text_color="white",
-        justify="center",
-    ).pack(
-        padx=15,
-        pady=(0, 12),
     )
 
     # ─────────────────────────────────────
