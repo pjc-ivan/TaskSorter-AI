@@ -106,7 +106,7 @@ def open_settings(
     win.title("Settings")
 
     # Window size adjusted to fit all content comfortably
-    win.geometry("600x720")
+    win.geometry("600x820")
 
     win.resizable(False, False)
 
@@ -361,5 +361,56 @@ def open_settings(
         anchor="w",
         padx=22,
         pady=(0, 18),
+    )
+
+    # Developer information section
+    dev_info_frame = ctk.CTkFrame(
+        ai,
+        fg_color="#2E86AB",  # Blue background for developer info
+        corner_radius=10,
+        border_width=2,
+        border_color="#1A5F7A",
+    )
+    dev_info_frame.pack(
+        fill="x",
+        padx=22,
+        pady=(0, 20),
+    )
+    
+    ctk.CTkLabel(
+        dev_info_frame,
+        text="👨‍💻 Developer Information",
+        font=("Arial", 14, "bold"),
+        text_color="white",
+        justify="center",
+    ).pack(
+        padx=15,
+        pady=(12, 6),
+    )
+    
+    ctk.CTkLabel(
+        dev_info_frame,
+        text="Ivan Pejic\n✉️ ivan.pejic@htl-wels.at\n✉️ pivane8@gmail.com",
+        font=("Arial", 13),
+        text_color="white",
+        justify="center",
+    ).pack(
+        padx=15,
+        pady=(0, 12),
+    )
+
+    # ─────────────────────────────────────
+    # CLOSE BUTTON
+    # ─────────────────────────────────────
+
+    ctk.CTkButton(
+        win,
+        text="Close",
+        command=win.destroy,
+        height=45,
+        width=200,
+        font=("Arial", 16, "bold"),
+    ).pack(
+        pady=(0, 24),
     )
 
