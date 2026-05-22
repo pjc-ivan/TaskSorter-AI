@@ -106,7 +106,7 @@ def open_settings(
     win.title("Settings")
 
     # Window size adjusted to fit all content comfortably
-    win.geometry("600x850")
+    win.geometry("600x1000")
 
     win.resizable(False, False)
 
