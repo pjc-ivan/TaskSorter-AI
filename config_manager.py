@@ -14,13 +14,21 @@ CONFIG_FILE = Path("config.json")
 
 
 config = {
-    "language": "de",
+    # Application language: "en" for English, "de" for German
+    "language": "en",
+    # Dark mode enabled/disabled
     "darkmode": True,
+    # Show completed tasks in the list
     "show_done": True,
+    # File path for storing tasks
     "task_file": "tasks.json",
-    "google_sync": True,
+    # Google Calendar synchronization (disabled by default)
+    "google_sync": False,
+    # First run flag for initial setup
     "first_run": False,
+    # Minutes before deadline to send reminder
     "reminder_minutes": 1440,
+    # Maximum character length for task input
     "max_task_length": 200,
 }
 

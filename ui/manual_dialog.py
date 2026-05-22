@@ -1,4 +1,6 @@
 # File: ui/manual_dialog.py
+# Manual task creation dialog for TaskSorter AI
+# Allows users to manually create tasks with title, due date, priority, and notes
 
 
 import customtkinter as ctk
@@ -8,15 +10,30 @@ from datetime import datetime
 
 
 # ─────────────────────────────────────
-# MANUAL TASK DIALOG
+# OPEN MANUAL TASK DIALOG
 # ─────────────────────────────────────
+# Opens a dialog window for manually creating a new task
 
 
 def open_manual_dialog(
     root,
     insert_task,
 ):
+    """
+    Open a dialog for manually creating a new task.
+    
+    Args:
+        root: The main application window
+        insert_task: Function to call when task is created
+    
+    The dialog allows entering:
+    - Task title
+    - Due date (DD.MM.YYYY format)
+    - Priority (High, Medium, Low)
+    - Notes
+    """
 
+    # Create dialog window
     win = ctk.CTkToplevel(root)
 
     win.title("Add Task")
@@ -27,9 +44,8 @@ def open_manual_dialog(
 
 
     # ─────────────────────────────────────
-    # TITLE
+    # DIALOG TITLE
     # ─────────────────────────────────────
-
 
     ctk.CTkLabel(
         win,
@@ -41,9 +57,9 @@ def open_manual_dialog(
 
 
     # ─────────────────────────────────────
-    # MAIN FRAME
+    # MAIN FORM FRAME
     # ─────────────────────────────────────
-
+    # Container for all form fields
 
     form = ctk.CTkFrame(
         win,
@@ -59,9 +75,8 @@ def open_manual_dialog(
 
 
     # ─────────────────────────────────────
-    # TASK TITLE
+    # TASK TITLE INPUT
     # ─────────────────────────────────────
-
 
     ctk.CTkLabel(
         form,
@@ -86,9 +101,8 @@ def open_manual_dialog(
 
 
     # ─────────────────────────────────────
-    # DUE DATE
+    # DUE DATE INPUT
     # ─────────────────────────────────────
-
 
     ctk.CTkLabel(
         form,
@@ -100,6 +114,7 @@ def open_manual_dialog(
     )
 
 
+    # Default placeholder shows today's date in DD.MM.YYYY format
     date_entry = ctk.CTkEntry(
         form,
         placeholder_text=datetime.today().strftime(
@@ -115,9 +130,8 @@ def open_manual_dialog(
 
 
     # ─────────────────────────────────────
-    # PRIORITY
+    # PRIORITY SELECTION
     # ─────────────────────────────────────
-
 
     ctk.CTkLabel(
         form,
@@ -129,11 +143,13 @@ def open_manual_dialog(
     )
 
 
+    # Variable for priority selection (default: Medium)
     prio_var = tk.StringVar(
         value="Medium"
     )
 
 
+    # Priority dropdown menu
     ctk.CTkOptionMenu(
         form,
         values=[
@@ -150,9 +166,8 @@ def open_manual_dialog(
 
 
     # ─────────────────────────────────────
-    # NOTES
+    # NOTES TEXT AREA
     # ─────────────────────────────────────
-
 
     ctk.CTkLabel(
         form,
@@ -176,9 +191,8 @@ def open_manual_dialog(
 
 
     # ─────────────────────────────────────
-    # BUTTONS
+    # ACTION BUTTONS
     # ─────────────────────────────────────
-
 
     buttons = ctk.CTkFrame(
         form,
@@ -191,13 +205,21 @@ def open_manual_dialog(
 
 
     def save_manual():
+        """
+        Save the manually entered task and close dialog.
+        
+        Parses the due date from DD.MM.YYYY format to ISO format.
+        If date parsing fails, uses today's date as default.
+        """
 
+        # Map priority labels to numeric values
         prio_map = {
             "High": 1,
             "Medium": 2,
             "Low": 3,
         }
 
+        # Parse due date from user input
         try:
 
             due = datetime.strptime(
@@ -207,8 +229,10 @@ def open_manual_dialog(
 
         except Exception:
 
+            # Use today's date if parsing fails
             due = datetime.today().date().isoformat()
 
+        # Build task data dictionary
         parsed = {
             "text": name_entry.get().strip(),
 
@@ -229,6 +253,7 @@ def open_manual_dialog(
         win.destroy()
 
 
+    # Save button - creates the task
     ctk.CTkButton(
         buttons,
         text="Save",
@@ -241,6 +266,7 @@ def open_manual_dialog(
     )
 
 
+    # Cancel button - closes dialog without saving
     ctk.CTkButton(
         buttons,
         text="Cancel",
