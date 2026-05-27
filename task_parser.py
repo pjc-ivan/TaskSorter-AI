@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 
 import dateparser
 
+from task_ai import parse_task_ai
+
 
 # ─────────────────────────────────────
 # DATE PARSER
