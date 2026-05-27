@@ -4,6 +4,7 @@
 
 
 import os
+import threading
 
 import customtkinter as ctk
 import tkinter as tk
@@ -345,6 +346,10 @@ def add_task_from_input():
     if len(text) > MAX_TASK_LENGTH:
         return
 
+    # Disable input during parsing
+    entry.configure(state="disabled")
+    create_button.configure(state="disabled")
+    
     # Show loading indicator
     loading_label = ctk.CTkLabel(
         input_frame,
@@ -357,29 +362,24 @@ def add_task_from_input():
         padx=(0, 12),
     )
     
-    # Disable input during parsing
-    entry.configure(state="disabled")
-    create_button.configure(state="disabled")
-    
     # Force UI update to show loading indicator
     root.update()
 
-    try:
-        # Parse task using AI/NLP
-        parsed = parse_task(text)
+    def parse_and_finish():
+        try:
+            # Parse task using AI/NLP
+            parsed = parse_task(text)
 
-        insert_task(parsed)
-
-        # Clear input field after adding
-        entry.delete(0, "end")
-    
-    finally:
-        # Remove loading indicator
-        loading_label.destroy()
+            # Schedule UI updates on main thread
+            root.after(0, lambda: insert_task(parsed))
+            root.after(0, lambda: entry.delete(0, "end"))
         
-        # Re-enable input
-        entry.configure(state="normal")
-        create_button.configure(state="normal")
+        finally:
+            # Schedule cleanup on main thread
+            root.after(0, lambda: (loading_label.destroy(), entry.configure(state="normal"), create_button.configure(state="normal")))
+
+    # Run parsing in background thread
+    threading.Thread(target=parse_and_finish, daemon=True).start()
 
 
 
@@ -625,7 +625,8 @@ create_button = ctk.CTkButton(
     width=140,
     height=52,
     command=add_task_from_input,
-).pack(
+)
+create_button.pack(
     side="right",
     padx=(0, 18),
 )
