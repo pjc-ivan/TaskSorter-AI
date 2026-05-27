@@ -345,13 +345,41 @@ def add_task_from_input():
     if len(text) > MAX_TASK_LENGTH:
         return
 
-    # Parse task using AI/NLP
-    parsed = parse_task(text)
+    # Show loading indicator
+    loading_label = ctk.CTkLabel(
+        input_frame,
+        text="⏳ Parsing...",
+        font=("Arial", 14),
+        text_color=("gray50", "gray70"),
+    )
+    loading_label.pack(
+        side="right",
+        padx=(0, 12),
+    )
+    
+    # Disable input during parsing
+    entry.configure(state="disabled")
+    create_button.configure(state="disabled")
+    
+    # Force UI update to show loading indicator
+    root.update()
 
-    insert_task(parsed)
+    try:
+        # Parse task using AI/NLP
+        parsed = parse_task(text)
 
-    # Clear input field after adding
-    entry.delete(0, "end")
+        insert_task(parsed)
+
+        # Clear input field after adding
+        entry.delete(0, "end")
+    
+    finally:
+        # Remove loading indicator
+        loading_label.destroy()
+        
+        # Re-enable input
+        entry.configure(state="normal")
+        create_button.configure(state="normal")
 
 
 
@@ -591,7 +619,7 @@ def edit_task(index):
 # Button to create task from input field
 
 
-ctk.CTkButton(
+create_button = ctk.CTkButton(
     input_frame,
     text="Create",
     width=140,
