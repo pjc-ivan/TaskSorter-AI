@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build Artifacts
+build/
+dist/
+output/
+Releases/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# PyInstaller
+*.spec.bak
+
+# Logs
+*.log
+stdout.txt
+stderr.txt
+exe_stdout.txt
+exe_stderr.txt
+
+# User Data
+tasks.json
+
+# Google OAuth
+token.json
+
+# Large Files
+OllamaSetup.exe
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python Cache
+.pytest_cache/
+.mypy_cache/
+
+# Windows Debug Files
+*.pdb
+
+# Temporary Files
+*.tmp
+*.bak

@@ -1,0 +1,733 @@
+# File: TaskSorter.py
+# Main application file for TaskSorter AI
+# This is the entry point that creates the GUI and handles task management
+
+
+import os
+import subprocess
+import sys
+import threading
+
+import customtkinter as ctk
+import tkinter as tk
+
+from task_parser import parse_task
+
+from config_manager import (
+    load_config,
+    save_config,
+    config,
+)
+
+from task_storage import (
+    load_tasks,
+    save_tasks,
+)
+
+from ui.settings_window import open_settings
+from ui.manual_dialog import open_manual_dialog
+from ui.task_renderer import render_tasks
+# CHANGE: Windows/Linux icon compatibility fix
+from ui.window_utils import (
+    apply_app_icon,
+    fit_window_after_idle,
+    fit_window_to_content,
+    set_windows_app_user_model_id,
+)
+
+
+# Try to import Google Calendar synchronization
+# If import fails, disable Google Calendar feature
+
+try:
+    from calendar_sync import (
+        create_event,
+        delete_event,
+    )
+
+    GCAL = True
+
+except Exception:
+
+    GCAL = False
+
+
+# ─────────────────────────────────────
+# CONFIGURATION
+# ─────────────────────────────────────
+# Load configuration from config.json file
+
+
+load_config()
+
+
+# Set appearance mode based on configuration (dark or light theme)
+
+ctk.set_appearance_mode(
+    "dark"
+    if config.get("darkmode", True)
+    else "light"
+)
+
+
+# ─────────────────────────────────────
+# MAIN APPLICATION WINDOW
+# ─────────────────────────────────────
+# Create the root window for the application
+
+
+# CHANGE: Windows/Linux icon compatibility fix
+set_windows_app_user_model_id()
+
+# CHANGE: Removed fixed window dimensions
+# CHANGE: Fixed startup failure - CTk() creates window in withdrawn state,
+# mainloop() handles visibility. No explicit withdraw/deiconify needed.
+root = ctk.CTk()
+
+root.title("TaskSorter AI")
+
+
+# ─────────────────────────────────────
+# APPLICATION ICON
+# ─────────────────────────────────────
+# Try to load and set the application icon
+
+
+# CHANGE: Windows/Linux icon compatibility fix
+apply_app_icon(root)
+
+
+# ─────────────────────────────────────
+# LOAD TASK DATA
+# ─────────────────────────────────────
+# Load existing tasks from storage
+
+
+tasks = load_tasks(config)
+
+
+# ─────────────────────────────────────
+# HEADER SECTION
+# ─────────────────────────────────────
+# Create the header with title and action buttons
+
+
+header = ctk.CTkFrame(
+    root,
+    corner_radius=0,
+)
+
+header.pack(
+    fill="x"
+)
+
+
+# Application title label
+
+ctk.CTkLabel(
+    header,
+    text="TaskSorter AI",
+    font=("Arial", 30, "bold"),
+).pack(
+    side="left",
+    padx=24,
+    pady=20,
+)
+
+
+# Container for header buttons
+
+header_buttons = ctk.CTkFrame(
+    header,
+    fg_color="transparent",
+)
+
+header_buttons.pack(
+    side="right",
+    padx=20,
+)
+
+
+# Add Task button - opens manual task creation dialog
+
+ctk.CTkButton(
+    header_buttons,
+    text="Add Task",
+    width=140,
+    height=42,
+    command=lambda: open_manual_dialog(
+        root,
+        insert_task,
+    ),
+).pack(
+    side="left",
+    padx=8,
+)
+
+
+# Settings button - opens settings window
+
+ctk.CTkButton(
+    header_buttons,
+    text="Settings",
+    width=140,
+    height=42,
+    command=lambda: open_settings(
+        root,
+        config,
+        save_config,
+        refresh_ui,  # Pass refresh callback for language changes
+        restart_app,  # CHANGE: Theme change requires restart - pass restart callback
+    ),
+).pack(
+    side="left",
+    padx=8,
+)
+
+
+# ─────────────────────────────────────
+# INPUT SECTION
+# ─────────────────────────────────────
+# Text input field for quick task creation
+
+
+input_frame = ctk.CTkFrame(
+    root,
+)
+
+input_frame.pack(
+    fill="x",
+    padx=20,
+    pady=20,
+)
+
+
+# Text entry field with placeholder text
+
+entry = ctk.CTkEntry(
+    input_frame,
+    placeholder_text=(
+        "Describe your task..."
+    ),
+    height=52,
+    font=("Arial", 16),
+)
+
+entry.pack(
+    side="left",
+    fill="x",
+    expand=True,
+    padx=(18, 12),
+    pady=18,
+)
+
+
+# ─────────────────────────────────────
+# TASKS SCROLL AREA
+# ─────────────────────────────────────
+# Scrollable frame to display all task cards
+
+
+scroll = ctk.CTkScrollableFrame(
+    root,
+)
+
+scroll.pack(
+    fill="both",
+    expand=True,
+    padx=20,
+    pady=(0, 20),
+)
+
+
+# ─────────────────────────────────────
+# HELPER FUNCTIONS
+# ─────────────────────────────────────
+# Maximum allowed length for task input text
+
+MAX_TASK_LENGTH = 300
+
+
+
+def save_all():
+    """
+    Save all tasks and configuration to disk.
+    Persists both task data and application settings.
+    """
+
+    save_tasks(
+        tasks,
+        config,
+    )
+
+    save_config()
+
+
+# CHANGE: Automatic application restart - used after theme changes
+def restart_app():
+    """
+    Save all data and restart TaskSorter in a new process.
+
+    Used when the user changes a setting that requires a restart
+    (e.g., appearance mode / dark mode).
+    """
+
+    save_all()
+
+    try:
+
+        if getattr(sys, "frozen", False):
+            # PyInstaller EXE: sys.executable is the EXE path
+            subprocess.Popen([sys.executable])
+
+        else:
+            # Source script: launch python with the script path
+            subprocess.Popen(
+                [sys.executable, os.path.abspath(sys.argv[0])]
+            )
+
+    except Exception as e:
+
+        print("Restart failed:", e)
+
+    # Terminate this process immediately
+    os._exit(0)
+
+
+
+def refresh_ui():
+    """
+    Refresh the user interface by re-rendering all tasks.
+    Clears the scrollable frame and rebuilds task cards.
+    """
+
+    render_tasks(
+        scroll,
+        tasks,
+        toggle_done,
+        delete_task,
+        edit_task,
+        config,
+    )
+
+    # CHANGE: Added automatic geometry calculation
+    fit_window_after_idle(
+        root,
+        min_width=520,
+        min_height=420,
+        max_width_ratio=0.85,
+        max_height_ratio=0.85,
+    )
+
+
+
+def insert_task(parsed: dict):
+    """
+    Insert a new task into the task list.
+    
+    Args:
+        parsed: Dictionary containing task data (text, due date, priority, notes)
+    
+    Creates Google Calendar event if sync is enabled.
+    """
+
+    event_id = None
+
+    # Create Google Calendar event if sync is enabled
+    if (
+        config.get("google_sync")
+        and GCAL
+    ):
+
+        try:
+
+            event_id = create_event(
+                parsed["text"],
+                parsed["due"],
+                parsed.get("notes", ""),
+                config.get(
+                    "reminder_minutes",
+                    1440,
+                ),
+            )
+
+        except Exception as e:
+
+            print(e)
+
+    # Mark task as not done by default
+    parsed["done"] = False
+
+    parsed["event_id"] = event_id
+
+    tasks.append(parsed)
+
+    save_all()
+
+    refresh_ui()
+
+
+
+def add_task_from_input():
+    """
+    Parse and add a task from the text input field.
+    Uses AI to extract task details from natural language.
+    """
+
+    # Get and clean input text
+    text = entry.get().strip()
+
+    # Don't process empty input
+    if not text:
+        return
+
+    # Don't process if exceeds maximum length
+    if len(text) > MAX_TASK_LENGTH:
+        return
+
+    # Disable input during parsing
+    entry.configure(state="disabled")
+    create_button.configure(state="disabled")
+    
+    # Show loading indicator
+    loading_label = ctk.CTkLabel(
+        input_frame,
+        text="⏳ Parsing...",
+        font=("Arial", 14),
+        text_color=("gray50", "gray70"),
+    )
+    loading_label.pack(
+        side="right",
+        padx=(0, 12),
+    )
+    
+    # Force UI update to show loading indicator
+    root.update()
+
+    def parse_and_finish():
+        try:
+            # Parse task using AI/NLP
+            parsed = parse_task(text)
+
+            # Schedule UI updates on main thread
+            root.after(0, lambda: insert_task(parsed))
+            root.after(0, lambda: entry.delete(0, "end"))
+        
+        finally:
+            # Schedule cleanup on main thread
+            root.after(0, lambda: (loading_label.destroy(), entry.configure(state="normal"), create_button.configure(state="normal")))
+
+    # Run parsing in background thread
+    threading.Thread(target=parse_and_finish, daemon=True).start()
+
+
+
+def toggle_done(index):
+    """
+    Toggle the completion status of a task.
+    
+    Args:
+        index: Index of the task in the tasks list
+    """
+
+    tasks[index]["done"] = not tasks[index]["done"]
+
+    save_all()
+
+    refresh_ui()
+
+
+
+def delete_task(index):
+    """
+    Delete a task from the task list.
+    
+    Args:
+        index: Index of the task to delete
+    
+    Also deletes associated Google Calendar event if it exists.
+    """
+
+    # Delete Google Calendar event if linked
+    if tasks[index].get("event_id"):
+
+        try:
+            delete_event(
+                tasks[index]["event_id"]
+            )
+
+        except Exception:
+            pass
+
+    tasks.pop(index)
+
+    save_all()
+
+    refresh_ui()
+
+
+# ─────────────────────────────────────
+# EDIT TASK FUNCTION
+# ─────────────────────────────────────
+# Opens dialog to edit an existing task
+
+
+def edit_task(index):
+    """
+    Open dialog to edit an existing task.
+    
+    Args:
+        index: Index of the task to edit
+    
+    Allows editing of title, due date, priority, and notes.
+    """
+
+    task = tasks[index]
+
+    # Create edit dialog window
+    win = ctk.CTkToplevel(root)
+
+    # CHANGE: Delayed window initialization
+    win.withdraw()
+    # CHANGE: Window hierarchy management
+    win.transient(root)
+
+    win.title("Edit Task")
+
+    # CHANGE: Removed fixed window dimensions
+    # CHANGE: Windows/Linux icon compatibility fix
+    apply_app_icon(win)
+
+
+    # Dialog title
+
+    ctk.CTkLabel(
+        win,
+        text="Edit Task",
+        font=("Arial", 28, "bold"),
+    ).pack(
+        pady=(24, 18)
+    )
+
+
+    # Form container frame
+
+    frame = ctk.CTkFrame(
+        win,
+        fg_color="transparent",
+    )
+
+    frame.pack(
+        fill="both",
+        expand=True,
+        padx=28,
+        pady=10,
+    )
+
+
+    # Task title input field
+
+    title_entry = ctk.CTkEntry(
+        frame,
+        height=48,
+    )
+
+    title_entry.insert(
+        0,
+        task.get("text", "")
+    )
+
+    title_entry.pack(
+        fill="x",
+        pady=(0, 18),
+    )
+
+
+    # Due date input field
+
+    due_entry = ctk.CTkEntry(
+        frame,
+        height=48,
+    )
+
+    due_entry.insert(
+        0,
+        task.get("due", "")
+    )
+
+    due_entry.pack(
+        fill="x",
+        pady=(0, 18),
+    )
+
+
+    # Priority mapping (number to label)
+
+    prio_map = {
+        1: "High",
+        2: "Medium",
+        3: "Low",
+    }
+
+
+    # Reverse priority mapping (label to number)
+
+    reverse_map = {
+        "High": 1,
+        "Medium": 2,
+        "Low": 3,
+    }
+
+
+    # Priority selection variable
+
+    prio_var = tk.StringVar(
+        value=prio_map.get(
+            task.get("priority", 3),
+            "Low",
+        )
+    )
+
+
+    # Priority dropdown menu
+
+    ctk.CTkOptionMenu(
+        frame,
+        values=[
+            "High",
+            "Medium",
+            "Low",
+        ],
+        variable=prio_var,
+        height=46,
+    ).pack(
+        fill="x",
+        pady=(0, 18),
+    )
+
+
+    # Notes text area
+
+    notes_box = ctk.CTkTextbox(
+        frame,
+        height=180,
+    )
+
+    notes_box.insert(
+        "1.0",
+        task.get("notes", "")
+    )
+
+    notes_box.pack(
+        fill="x",
+        pady=(0, 24),
+    )
+
+
+    def save_edit():
+        """Save edited task data and close dialog."""
+
+        task["text"] = title_entry.get().strip()
+
+        task["due"] = due_entry.get().strip()
+
+        task["priority"] = reverse_map[
+            prio_var.get()
+        ]
+
+        task["notes"] = notes_box.get(
+            "1.0",
+            "end",
+        ).strip()
+
+        save_all()
+
+        refresh_ui()
+
+        # CHANGE: Parent-child focus handling
+        win.grab_release()
+        win.destroy()
+        root.focus_set()
+
+
+    # Save button
+
+    ctk.CTkButton(
+        frame,
+        text="Save",
+        height=48,
+        command=save_edit,
+    ).pack(
+        fill="x"
+    )
+
+    # CHANGE: Parent-child focus handling
+    def on_edit_closing():
+        win.grab_release()
+        win.destroy()
+        root.focus_set()
+
+    win.protocol("WM_DELETE_WINDOW", on_edit_closing)
+
+    # CHANGE: Delayed window initialization - show after all widgets created
+    win.update_idletasks()
+    fit_window_to_content(
+        win,
+        min_width=420,
+        min_height=520,
+        max_width_ratio=0.85,
+        max_height_ratio=0.85,
+    )
+    win.deiconify()
+    # CHANGE: Modal dialog behavior
+    win.grab_set()
+    win.focus_set()
+
+    # CHANGE: Added automatic geometry calculation
+    fit_window_after_idle(
+        win,
+        min_width=420,
+        min_height=520,
+        max_width_ratio=0.85,
+        max_height_ratio=0.85,
+    )
+
+
+# ─────────────────────────────────────
+# CREATE BUTTON
+# ─────────────────────────────────────
+# Button to create task from input field
+
+
+create_button = ctk.CTkButton(
+    input_frame,
+    text="Create",
+    width=140,
+    height=52,
+    command=add_task_from_input,
+)
+create_button.pack(
+    side="right",
+    padx=(0, 18),
+)
+
+
+# Bind Enter key to create task
+
+entry.bind(
+    "<Return>",
+    lambda e: add_task_from_input(),
+)
+
+
+# ─────────────────────────────────────
+# START APPLICATION
+# ─────────────────────────────────────
+# Initial UI render and start main event loop
+
+
+# CHANGE: Fixed startup failure - CTk creates window withdrawn, mainloop shows it
+refresh_ui()
+
+root.mainloop()
+
