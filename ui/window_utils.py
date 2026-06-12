@@ -7,33 +7,7 @@ import sys
 import tkinter as tk
 
 
-# CHANGE: Fixed task persistence - consistent user data directory for all platforms
-def get_data_dir():
-    """
-    Return a writable directory for user data (tasks.json, token.json, config.json).
-    Windows:  %%APPDATA%%\\TaskSorter
-    Linux:    ~/.local/share/TaskSorter
-    """
-
-    if os.name == "nt":
-        base = os.environ.get("APPDATA", os.path.expanduser("~"))
-    else:
-        base = os.environ.get(
-            "XDG_DATA_HOME",
-            os.path.join(os.path.expanduser("~"), ".local", "share"),
-        )
-
-    data_dir = os.path.join(base, "TaskSorter")
-
-    try:
-        os.makedirs(data_dir, exist_ok=True)
-    except Exception:
-        pass
-
-    return data_dir
-
-
-# CHANGE: Fixed file path handling - resolve bundled assets in dev or PyInstaller
+# CHANGE: Windows/Linux icon compatibility fix
 def resource_path(relative_path):
     """
     Resolve asset paths in development and in PyInstaller executables.
@@ -290,3 +264,31 @@ def fit_scrollable_frame_to_content(
         )
     )
 
+def get_data_dir():
+    """
+    Returns a writable application data directory.
+    """
+
+    if os.name == "nt":
+        base = os.environ.get(
+            "APPDATA",
+            os.path.expanduser("~"),
+        )
+    else:
+        base = os.path.join(
+            os.path.expanduser("~"),
+            ".local",
+            "share",
+        )
+
+    data_dir = os.path.join(
+        base,
+        "TaskSorter",
+    )
+
+    os.makedirs(
+        data_dir,
+        exist_ok=True,
+    )
+
+    return data_dir

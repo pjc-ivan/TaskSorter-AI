@@ -1,89 +1,96 @@
 #!/bin/bash
 
-# CHANGE: Fixed Linux installer performance - complete rewrite
-# Previous version had all commands on one line (broken formatting)
-# and contained unnecessary waits and redundant installations.
-
 echo ""
 echo "Installing TaskSorter AI..."
 echo ""
 
 # ─────────────────────────────────────
-# PYTHON DEPENDENCIES
+# SYSTEM DEPENDENCIES
 # ─────────────────────────────────────
-# CHANGE: Combined three dnf install commands into one
 
-sudo dnf install -y python3 python3-pip python3-virtualenv
+sudo dnf install -y \
+    python3 \
+    python3-pip \
+    python3-virtualenv \
+    python3-tkinter \
+    curl
 
 # ─────────────────────────────────────
 # OLLAMA
 # ─────────────────────────────────────
 
-curl -fsSL https://ollama.com/install.sh | sh
+if ! command -v ollama >/dev/null 2>&1; then
+    curl -fsSL https://ollama.com/install.sh | sh
+fi
 
-systemctl --user enable ollama
-systemctl --user start ollama
+systemctl --user enable ollama >/dev/null 2>&1 || true
+systemctl --user start ollama >/dev/null 2>&1 || true
 
-# CHANGE: Replace sleep 5 with a readiness check loop
-echo "Waiting for Ollama server to start..."
+echo "Waiting for Ollama server..."
+
 for i in $(seq 1 30); do
     if ollama list >/dev/null 2>&1; then
-        echo "Ollama server is ready."
+        echo "Ollama ready."
         break
     fi
-    echo "Waiting for Ollama... ($i/30)"
     sleep 1
 done
 
 # ─────────────────────────────────────
-# VIRTUAL ENVIRONMENT
+# PYTHON VENV
 # ─────────────────────────────────────
 
-python3 -m venv venv
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+fi
+
 source venv/bin/activate
 
 # ─────────────────────────────────────
 # PYTHON PACKAGES
 # ─────────────────────────────────────
-# CHANGE: Combined all pip installs into one, removed pip --upgrade
 
-pip install customtkinter dateparser ollama spacy google-api-python-client google-auth-httplib2 google-auth-oauthlib
+pip install -q \
+    customtkinter \
+    spacy \
+    ollama \
+    google-api-python-client \
+    google-auth-httplib2 \
+    google-auth-oauthlib
 
 # ─────────────────────────────────────
 # SPACY MODEL
 # ─────────────────────────────────────
 
+python -c "import spacy; spacy.load('de_core_news_sm')" >/dev/null 2>&1 || \
 python -m spacy download de_core_news_sm
 
 # ─────────────────────────────────────
-# AI MODEL (runs in background while pip installs)
+# AI MODEL
 # ─────────────────────────────────────
-# CHANGE: Pull model after dependencies to avoid timeout
-# The model download is large and runs in the foreground
-# so the user can monitor progress.
 
-ollama pull gemma3:1b
+ollama list | grep -q "gemma3:1b" || ollama pull gemma3:1b
 
 # ─────────────────────────────────────
 # RUN SCRIPT
 # ─────────────────────────────────────
 
-cat > run.sh << 'EOL'
+cat > run.sh << 'EOF'
 #!/bin/bash
 cd "$(dirname "$0")"
 source venv/bin/activate
 python TaskSorter.py
-EOL
+EOF
 
 chmod +x run.sh
 
 # ─────────────────────────────────────
-# APPLICATION MENU ENTRY
+# DESKTOP ENTRY
 # ─────────────────────────────────────
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-cat > TaskSorterAI.desktop << EOL
+cat > TaskSorterAI.desktop << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -95,19 +102,18 @@ Icon=${SCRIPT_DIR}/assets/icon.png
 Terminal=false
 Categories=Utility;
 StartupNotify=true
-EOL
+EOF
 
 chmod +x TaskSorterAI.desktop
+
 mkdir -p ~/.local/share/applications
 cp TaskSorterAI.desktop ~/.local/share/applications/
-update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
 
-# ─────────────────────────────────────
-# FINISHED
-# ─────────────────────────────────────
+update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
 
 echo ""
 echo "Installation complete!"
 echo ""
-echo "Run: ./run.sh"
+echo "Start with:"
+echo "./run.sh"
 echo ""
