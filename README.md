@@ -1,46 +1,54 @@
 # TaskSorter AI
 
-TaskSorter AI is a task management application developed as a school project.
+TaskSorter AI is a desktop task management application developed as a software engineering project at HTL Wels.
 
-The application allows users to:
-
-* create and manage tasks
-* automatically sort tasks by deadline and priority
-* synchronize tasks with Google Calendar
-* use local AI for intelligent task recognition
-* add notes to tasks
-* edit and complete tasks
-
-The AI system uses a local Ollama language model and works offline after installation.
+The application helps students organize their tasks by automatically detecting deadlines and priorities from natural language input. Tasks can optionally be synchronized with Google Calendar to receive reminders on multiple devices.
 
 ---
 
 # Features
 
-* AI-based task extraction
-* Automatic date recognition
-* Priority management
+* Create, edit and delete tasks
+* Automatic task sorting by deadline and priority
+* AI-supported task recognition from natural language input
+* Automatic due date detection
+* Priority detection
+* Task notes
 * Google Calendar synchronization
-* Notes for tasks
-* Modern graphical interface
-* Offline AI support
-* Linux application menu integration
+* Dark mode support
+* Local data storage
+* Linux desktop integration
+* Offline AI processing after installation
+
+---
+
+# Download
+
+Latest release:
+
+OneDrive Project Files:
+
+https://office365htlwels-my.sharepoint.com/:f:/g/personal/ivan_pejic_htl-wels_at/IgAQLv4Gx029RYun7jW-zDIBAR584Qua2ATm_By39x8G9Yw?e=V5YMip
 
 ---
 
 # Requirements
 
-Linux distribution with:
+Linux:
 
 * Python 3
 * sudo permissions
-* internet connection for first installation
+* Internet connection for initial installation
+
+Windows:
+
+* Use the provided installer package from the release folder.
 
 ---
 
-# Installation
+# Linux Installation
 
-Open terminal inside the project folder.
+Open a terminal inside the TaskSorter directory.
 
 Make the installer executable:
 
@@ -48,7 +56,7 @@ Make the installer executable:
 chmod +x install_linux.sh
 ```
 
-Run the installer:
+Start the installation:
 
 ```bash
 ./install_linux.sh
@@ -56,25 +64,24 @@ Run the installer:
 
 The installer automatically:
 
-* installs Python dependencies
-* installs Ollama
-* downloads the AI model
-* installs spaCy language data
-* creates the application menu entry
+* Installs Python dependencies
+* Installs Ollama
+* Downloads the AI model
+* Installs the German spaCy language model
+* Creates a desktop application entry
+* Creates the virtual environment
 
 ---
 
-# Starting The Application
+# Starting TaskSorter
 
-After installation:
-
-From Linux application menu:
+After installation you can start TaskSorter either from the application menu:
 
 ```text
 TaskSorter AI
 ```
 
-Or manually:
+or manually:
 
 ```bash
 ./run.sh
@@ -84,49 +91,53 @@ Or manually:
 
 # AI System
 
-TaskSorter AI uses:
+TaskSorter AI uses a locally running AI model through Ollama.
+
+Technologies:
 
 * Ollama
-* gemma3:1b
+* Gemma 3 1B
 * spaCy NLP
 
-The AI system extracts:
-
-* task title
-* due date
-* priority
-* notes
-
-Example:
-
-Input:
+Example input:
 
 ```text
-Ich muss bis morgen dringend die Mathe Hausübung machen
+I have to finish the math homework by tomorrow. It is important.
 ```
 
-Output:
+Detected information:
 
 ```text
-Mathe Hausübung
+Task: Math homework
+Due date: Tomorrow
+Priority: High
 ```
+
+All AI processing runs locally on the device after installation.
 
 ---
 
-# Google Calendar
+# Google Calendar Synchronization
 
-Google Calendar synchronization requires:
+TaskSorter can synchronize tasks with Google Calendar.
 
-* credentials.json
+Requirements:
 
-On first start, Google authentication will open automatically.
+* Google account
+* credentials.json file provided by the developer
+
+During the first synchronization process a Google login window will open automatically.
+
+Note:
+
+Google Calendar integration is only available when the required Google API credentials have been provided by the developer.
 
 ---
 
 # Project Structure
 
 ```text
-TaskSorter/
+TaskSorter
 │
 ├── assets/
 ├── ui/
@@ -137,6 +148,7 @@ TaskSorter/
 ├── config_manager.py
 ├── calendar_sync.py
 ├── install_linux.sh
+├── run.sh
 └── README.md
 ```
 
@@ -147,11 +159,38 @@ TaskSorter/
 * Python
 * CustomTkinter
 * Ollama
+* Gemma 3
 * spaCy
 * Google Calendar API
 
 ---
 
+# Data Storage
+
+User data is stored locally on the device.
+
+Linux:
+
+```text
+~/.local/share/TaskSorter/
+```
+
+Windows:
+
+```text
+%APPDATA%\TaskSorter\
+```
+
+---
+
 # Authors
 
-TaskSorter AI was developed as part of a HTL software engineering school project.
+Developed by:
+
+* Ivan Pejic
+* Lukas Sokic
+* Leo Fichtner
+
+HTL Wels
+
+Software Engineering Project 2025/2026
